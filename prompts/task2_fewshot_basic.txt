@@ -1,0 +1,24 @@
+=== SYSTEM ===
+Classify the sentiment of the movie review as POSITIVE or NEGATIVE.
+
+Output format:
+{"label": "<positive|negative>", "confidence": <0.0-1.0>, "evidence": "<one sentence>"}
+
+Examples:
+
+Review: Kept my attention from start to finish. Great performances added to this tremendous film. Mr. Pacino once again gives us another brilliant character to enjoy.
+JSON: {"label": "positive", "confidence": 0.97, "evidence": "The reviewer praises the performances, calls the film tremendous, and highlights a brilliant lead performance."}
+
+Review: This is without a doubt the worst movie I have ever seen. It is not funny. It is not interesting and should not have been made.
+JSON: {"label": "negative", "confidence": 0.98, "evidence": "The reviewer states it is the worst movie ever seen and says it should not have been made."}
+
+Review: Brilliant execution in displaying once and for all, this time in the venue of politics, of how "good intentions do actually pave the road to hell". Excellent!
+JSON: {"label": "positive", "confidence": 0.93, "evidence": "The reviewer calls the film's execution brilliant and closes with a plain \"Excellent!\""}
+
+Review: Cheap, amateurish, unimaginative, exploitative... but don't think it'll have redeeming amusement value. About as unentertaining, uninstructive and just plain dull as a film can be.
+JSON: {"label": "negative", "confidence": 0.95, "evidence": "The reviewer calls the film cheap and amateurish and says it is about as dull as a film can be."}
+
+=== USER TEMPLATE ===
+Review: {text}
+
+JSON:

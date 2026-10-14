@@ -1,0 +1,48 @@
+# ---------------------------------------------------------------------------
+# Core dependencies. PyTorch is NOT listed here on purpose: the RTX 5080
+# (Blackwell, sm_120) needs the CUDA 12.8 wheel from PyTorch's own index.
+# Install it first with the command in README.md, then run:
+#     pip install -r requirements.txt
+# ---------------------------------------------------------------------------
+
+# --- HuggingFace stack ---
+transformers>=4.45.0
+accelerate>=1.0.0
+tokenizers>=0.20.0
+huggingface_hub>=0.26.0
+safetensors>=0.4.5
+datasets>=2.20.0     # loads stanfordnlp/imdb directly from the Hub
+
+# --- Quantization + PEFT (4-bit path, and QLoRA in later tasks) ---
+bitsandbytes>=0.45.0
+peft>=0.13.0
+
+# --- Data & metrics ---
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.5.0
+pyarrow>=17.0.0
+
+# --- Plots for EDA / confusion matrix ---
+matplotlib>=3.9.0
+seaborn>=0.13.0
+
+# --- NLTK stopwords for EDA top-token counts ---
+nltk>=3.9.0
+
+# --- Sentence embeddings for representative few-shot demo selection ---
+# scripts/11_select_representative_samples.py embeds train.csv reviews with
+# sentence-transformers/all-MiniLM-L6-v2 to pick each class's prototype demos.
+# (The script has a plain-`transformers` mean-pool fallback if this is missing,
+# but this is the canonical path.)
+sentence-transformers>=3.0.0
+
+# --- Config, CLI, progress ---
+PyYAML>=6.0.2
+tqdm>=4.66.0
+
+# --- System info for the environment record ---
+psutil>=6.0.0
+
+# Note: credentials are read from .env by src/utils.py, which is dependency-free
+# on purpose — no python-dotenv required.

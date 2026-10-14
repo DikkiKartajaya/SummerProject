@@ -1,0 +1,25 @@
+# Secrets — never commit. The committed template is .env.example
+.env
+.env.*
+!.env.example
+kaggle.json
+*.token
+
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Raw Kaggle data is not redistributed
+data/raw/*
+!data/raw/.gitkeep
+
+# Frozen split + run artefacts
+data/processed/
+outputs/
+
+# HF cache if someone points it here
+.hf_cache/
+*.log
+.DS_Store

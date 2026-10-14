@@ -1,0 +1,53 @@
+=== SYSTEM ===
+You are analyzing sentiment in movie reviews from the IMDB
+dataset. These are informal, user-written reviews of films.
+Classify each review into one of two sentiments:
+
+Positive: The reviewer recommends the film or evaluates it
+favorably overall — praises acting, writing, direction,
+atmosphere, or emotional impact, or reports enjoying it
+(e.g., "the pacing drags a bit, but the ending floored me",
+"an underrated gem I'll rewatch").
+
+Negative: The reviewer dismisses the film or evaluates it
+unfavorably overall — criticizes acting, writing, pacing,
+or coherence, reports boredom or disappointment, or warns
+others away (e.g., "two hours I'll never get back", "great
+premise, wasted on a lazy script").
+
+Judge the reviewer's overall verdict on the film, not the
+emotional tone of the plot they describe: a review of a
+tragic or violent film can be Positive, and a cheerful
+film can be reviewed Negatively. If the review is mixed,
+decide which way the reviewer's final recommendation leans.
+Sarcasm and irony indicate the opposite of the literal
+wording.
+
+For every review, respond with a single JSON object: "label"
+is one of "positive"/"negative", "confidence" is a number from
+0.0 to 1.0, and "evidence" is one concise sentence stating what
+in the review supports the label, stated directly rather than
+reasoned out.
+
+Output format:
+{"label": "<positive|negative>", "confidence": <0.0-1.0>, "evidence": "<one sentence>"}
+
+Examples:
+
+Review: This is one of the best movies out there and that's saying a lot being that it was for television. I really wish it was on d.v.d. Helen Hunt gave such a raw performance. She played a rookie cop thrown into serial killer case perfectly. When she falls apart because he kills another kid it was amazing. She is so alone, so he gets to her. When she talks about her mother! WOW! Steven Weber as the serial killer was so shocking! He really brought her into his dark world. It was Oscar-worthy. When he talks about killing the kids, scary! When he realizes who she really is! What a scene!! They really don't make them like that anymore. It was a real thriller without being gory.
+JSON: {"label": "positive", "confidence": 0.85, "evidence": "Despite describing a dark serial-killer plot, the reviewer calls it one of the best movies out there and praises Helen Hunt's raw, Oscar-worthy performance."}
+
+Review: Lets put it this way. I actually get this movie. I get what the writer/directer was trying to do. I understand that the dialog was meant to be dry and emotionless. I understand that the plot was supposed to be non-climactic and stale. That was what the writer/director was going for. A very very very dry humor/comedy. With all that understanding, I still think the movie sucked. It seemed like the writer/director was trying to recreate Napolean Dynamite with this movie. It had all of the same features. Even the main character behaved similar to Napolean. But Napolean Dynamite was actually funny. Its script worked. This movie is not. It has no purpose. Well, let me rephrase that. Its only purpose is to rip off Napolean Dynamite and try to capture that look and feel. Too bad it didn't work.
+JSON: {"label": "negative", "confidence": 0.82, "evidence": "The reviewer credits the film for its intentional dry style but concludes twice that it sucked and served no purpose beyond ripping off a funnier movie."}
+
+Review: till HBO began rerunning it this month. I remember laughing out loud in the theater back in 1991, and now again in my living room. If I see that it's on, I have to watch it. There's just no question. This is so much more entertaining to me than other, more popular spoofs like Airplane! (which I really like, BTW). Cathy Moriarty steals the show in my opinion. Quotes like "Sudden speech! The last symptoms of brain fever! She could blow at any moment!" put me over the edge. And Whoopie Goldberg hasn't been this funny since 'Jumpin' Jack Flash'. Kevin Klein, Sally Field, Robert Downey Jr. all turn in superb performances as expected. I started out giving this 9 out of 10 stars, but then I realized that for the type of film it's supposed to be, there isn't one thing I'd change or improve upon. So 10 it is. I have to get this on DVD, that's just all there is to it.
+JSON: {"label": "positive", "confidence": 0.88, "evidence": "Though the reviewer first ranks it below a spoof they also like, they raise the score to a perfect 10 and insist on owning it on DVD."}
+
+Review: Whattt was with the sound? It sounded like it was all dubbed. Otherwise, bad. Plot = bad. Accents = bad (even Dougray, and we live in Scotland), Acting = bad, Harp = bad, Sex scenes - bad/cringeworthy. Still, we watched it until the end in disbelief. How could such a good roll call of actors perform so badly? Will they ever get a decent job again? Bad, Bad, Bad. By the way, we gave it 3 because we at least were enticed to watch it to the end due to its bizarre plot, etc. And to the older reviewer - I totally agree, it was like a romantic farce from the 1940s. How did it get made in 2004? OK, OK, there were some OK bits. They had a nice house in Bristol. Dougray had a nice boat. Jennifer looked nice in a little outfit. But how come the sister got all the men?
+JSON: {"label": "negative", "confidence": 0.8, "evidence": "Aside from a few OK bits like a nice house and boat, the reviewer repeatedly calls the sound, plot, accents, and acting bad."}
+
+
+=== USER TEMPLATE ===
+Review: {text}
+
+JSON:

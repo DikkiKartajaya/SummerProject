@@ -1,0 +1,58 @@
+# ===========================================================================
+# Task 2 - Few-Shot Sentiment Analysis (curated vs random prompt strategies)
+# Reuses the same model and frozen split as Task 1; only decoding and the
+# task2-specific evaluation settings differ.
+# ===========================================================================
+
+seed: 42
+
+# --- Model -------------------------------------------------------------
+model:
+  checkpoint: "meta-llama/Llama-3.2-3B-Instruct"
+  revision: "main"
+  precision: "bf16"
+  attn_implementation: "sdpa"
+  device_map: "cuda:0"
+  # The few-shot demos are full IMDB reviews (curated: short, ~30-45 words each;
+  # random: unfiltered, up to ~240 words each), stacked on top of a target
+  # review that can itself run to ~900 words at p99 - much longer than Task 1's
+  # zero-shot prompt. Sized generously so the (unfiltered) random strategy's
+  # worst case doesn't silently truncate; lower if VRAM is tight.
+  max_input_tokens: 2048
+
+# --- Decoding: deterministic, same as Task 1 ----------------------------
+decoding:
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+  # label + confidence + one-sentence evidence needs more room than a bare label.
+  # 80 was too tight: successful (parseable) replies already ran up to ~81
+  # tokens, so anything slightly more verbose got cut off mid-JSON and showed
+  # up as an "invalid" (no_json_found) row instead of a real parse failure -
+  # this was most of Task 2's invalid-output rate. Set to 2x the longest
+  # successful reply observed (81 tokens) for headroom.
+  max_new_tokens: 162
+  repetition_penalty: 1.0
+
+# --- Split: reuse the exact same frozen split Task 1 created ------------
+split:
+  out_dir: "data/processed"
+
+# --- Task 2 evaluation ---------------------------------------------------
+task2:
+  # "val" for comparing prompt strategies; switch to "test" for the final
+  # 1000-example comparison once a strategy is picked.
+  source: "val"
+  n_samples: 1000
+  stratified_sample: true
+  batch_size: 8
+  out_dir: "outputs/task2"
+  # scripts/07_run_prompt_sensitivity.py: perturbs the winning strategy's
+  # prompt (instruction phrasing / demo order / output schema) and scores each
+  # variant on --source (default: test). Shares every setting above.
+  sensitivity_out_dir: "outputs/task2_sensitivity"
+  # scripts/08_run_self_consistency.py: curated + random on --source (default:
+  # test), greedy (--self-consistency 1) or N-sample majority vote. Reuses the
+  # decoding block above for max_new_tokens etc.; the N>1 path overrides
+  # temperature/top_p to 0.7/0.95 (see src/self_consistency.py).
+  selfconsistency_out_dir: "outputs/task2_selfconsistency"

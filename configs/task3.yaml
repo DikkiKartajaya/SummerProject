@@ -1,0 +1,125 @@
+# ===========================================================================
+# Task 3 - QLoRA fine-tuning of Llama-3.1-8B-Instruct for binary sentiment
+#
+# Trains ONLY on data/processed/train.csv (the frozen 80% split Task 1
+# created), selects the checkpoint by validation macro-F1 on val.csv, and
+# reports the headline number on test.csv. Same frozen split, same JSON
+# answer schema, and the same metrics.py as Tasks 1-2, so every number is
+# directly comparable to the zero-/few-shot baselines.
+#
+# Everything written under outputs/task3/ can be traced back to this file
+# (it is copied into each run directory as run_config.json).
+# ===========================================================================
+
+# Base random seed. scripts/12_run_task3_qlora.py runs one full
+# load->train->select->evaluate cycle per seed in `seeds` and reports the
+# mean / std across them (requirement 5: "run at least two random seeds").
+seed: 42
+seeds: [42, 1337]
+
+# --- Split: reuse the exact frozen split Task 1 created ----------------
+split:
+  out_dir: "data/processed"
+
+# --- Base model (frozen, 4-bit) -----------------------------------------
+model:
+  # Gated repo - needs HF_TOKEN in .env AND the Llama 3.1 licence accepted by
+  # your account at https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct
+  # (the same token used for Tasks 1-2; the 3.1 licence is separate from 3.2).
+  checkpoint: "meta-llama/Llama-3.1-8B-Instruct"
+  revision: "main"
+  attn_implementation: "sdpa"
+  device_map: "cuda:0"
+
+  # 4-bit NF4 + double quantization (requirement 1). bnb_4bit_compute_dtype is
+  # resolved at load time: bfloat16 when the GPU supports it
+  # (torch.cuda.is_bf16_supported()), float16 otherwise. See src/qlora.py.
+  quantization:
+    load_in_4bit: true
+    bnb_4bit_quant_type: "nf4"
+    bnb_4bit_use_double_quant: true
+    # "auto" -> bf16 if supported else fp16. Force with "bfloat16"/"float16".
+    bnb_4bit_compute_dtype: "auto"
+
+# --- LoRA adapter (requirement 2 + 3) ----------------------------------
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  bias: "none"
+  # The 7 linear projections in every decoder block - the standard QLoRA
+  # target set (attention q/k/v/o + MLP gate/up/down). "all-linear" would also
+  # catch lm_head, which we deliberately leave frozen.
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj",
+                   "gate_proj", "up_proj", "down_proj"]
+
+# --- Instruction formatting -------------------------------------------
+# The (review -> label) supervised pair is rendered with the model's own chat
+# template: a system message with the label definitions, a user message with
+# the review, and an assistant turn that is exactly the Task 1/2 JSON answer
+# `{"label": "positive"}`. Loss is computed on the assistant tokens only
+# (the prompt is masked with -100). See src/instruction_format.py.
+instruction:
+  prompt_file: "prompts/task3_instruction.txt"
+  # Reviews are truncated to this many tokens BEFORE templating, so the
+  # assistant answer and the system prompt are never cut. p99 of the pool is
+  # ~1350 tokens; 896 keeps the vast majority intact while bounding VRAM.
+  max_review_tokens: 896
+  # Hard cap on the full templated example (prompt + answer). Anything longer
+  # is dropped rather than silently truncated mid-answer.
+  max_seq_len: 1024
+
+# --- Training --------------------------------------------------------
+train:
+  source: "train"            # the frozen 80% split - never val/test/holdout
+  # Rows sampled (stratified) from train.csv. null = all 19,921. The default
+  # keeps a single seed's run to ~1 GPU-hour on a 16 GB card; raise it (or set
+  # null) for the full-data run once the pipeline is verified.
+  max_train_samples: 3000
+  num_train_epochs: 1
+  max_steps: -1             # >0 overrides num_train_epochs
+
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16   # effective batch size 16
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03        # converted to warmup_steps at build time
+  weight_decay: 0.0
+  max_grad_norm: 0.3
+  optim: "paged_adamw_8bit"
+
+  # requirement 2: gradient checkpointing. Enabled explicitly in src/qlora.py
+  # (non-reentrant), so it is NOT re-enabled via TrainingArguments.
+  gradient_checkpointing: true
+
+  # Evaluation + checkpointing cadence (steps). eval and save share the step
+  # count so load_best_model_at_end can pick the best by eval_macro_f1.
+  eval_steps: 50
+  save_steps: 50
+  logging_steps: 10
+  save_total_limit: 2       # best + most-recent
+
+# --- Checkpoint selection + evaluation ------------------------------
+eval:
+  # Metric that drives checkpoint selection (requirement 4). Computed by
+  # generating on the validation split and scoring with metrics.compute -
+  # NOT the token-level eval_loss.
+  metric_for_best_model: "eval_macro_f1"
+  greater_is_better: true
+
+  # During training, macro-F1 is computed on this many stratified val rows
+  # (speed). The FINAL selected adapter is then re-scored on the FULL val and
+  # test splits for the reported numbers.
+  select_max_samples: 500
+  final_max_samples: null   # null = full val.csv / test.csv
+
+  # The token-level eval_loss is a cheap monitoring curve only (selection uses
+  # generation macro-F1), so it runs on a smaller slice with a real batch.
+  loss_max_samples: 200
+  loss_batch_size: 4
+
+  # Greedy decoding for every generation-based evaluation (matches Task 1/2).
+  batch_size: 8
+  max_new_tokens: 16
+
+out_dir: "outputs/task3"

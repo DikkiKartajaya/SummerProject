@@ -1,0 +1,24 @@
+=== SYSTEM ===
+Classify the sentiment of the movie review as POSITIVE or NEGATIVE.
+
+Output format:
+{"label": "<positive|negative>", "confidence": <0.0-1.0>, "evidence": "<one sentence>"}
+
+Examples:
+
+Review: The villian in this movie is one mean sob and he seems to enjoy what he is doing, that is what I guess makes him so mean. I don't think most men will like this movie, especially if they ever cheated on their wife. This is one of those movies that pretty much stays pretty mean to the very end. But then, there you have it, a candy-bar ending that makes me look back and say, "HOKIE AS HELL." A pretty good movie until the end. Ending is the ending we would like to see but not the ending to such a mean beginning. And then there is the aftermath of what happened. Guess you can make up your own mind about the true ending. I'm left feeling that only one character should have survived at the end.
+JSON: {"label": "positive", "confidence": 0.72, "evidence": "The reviewer calls it a pretty good movie and says the ending is the one they wanted to see, despite grumbling about how hokey it is."}
+
+Review: This is one of those movies where I wish I had just stayed in the bar. The film is quite frankly boring. What story there is is very flimsy and you pretty much have to guess at it. The film indulges itself with pretentious camera techniques that seem intent on causing migraines and makes it look like a student film. Did I say it was boring already? If all the characters had suddenly died at the end of the movie I would not have cared less as I had no emotional attachment to any of them. There are about 4 good minutes in this movie, but that was about it. This is the first time I have ever considered walking out of a cinema during a performance, but I held on believing that it had to get better. I was wrong. The sort of film you could threaten naughty children with.
+JSON: {"label": "negative", "confidence": 0.95, "evidence": "The reviewer repeatedly calls the film boring, wishes they had skipped it for the bar, and admits considering walking out of the cinema."}
+
+Review: The critics are dumb. This movie is funny and smart. I loved this movie a lot. Why does everyone hate this movie so much. I wish people would love this movie more than they don't. Ben Stiller and Jack Black are true comedians and they put through a lot of work to make this movie. I don't see you people out there making movies like them. So people should just watch it and not comment it. I like this movie. It is OK through it all. There are parts were it get's dumb but at least they made it. Jerry Stiller would love this because this movie has the acting just like the show King Of Queens. But this is better than that. I can't believe this was rated so low.
+JSON: {"label": "positive", "confidence": 0.85, "evidence": "The reviewer says the movie is funny and smart, states they loved it a lot, and defends it against its low ratings."}
+
+Review: I'm not sure what. I just couldn't laugh at it. I had an open mind. I didn't want to be a tight-@ss about it. But I seriously just couldn't laugh at this film. It was just not funny to me. Some parts it seemed like Ben Stiller and Jack Black tried too hard. Just because you put two very funny men together doesn't mean that this is going to be an excellent comedy. Some movies just shouldn't be made. This is one of them. Because it does a lot of old jokes and the acting was just stupid. I know, I know it's a comedy. Sort of at least. But I was just not impressed. I'm sorry, but I cannot give this anything lower than a two. And that's all I'm giving. 2/10
+JSON: {"label": "negative", "confidence": 0.9, "evidence": "The reviewer says they couldn't laugh at the film, calls the acting stupid, and gives it only a 2/10."}
+
+=== USER TEMPLATE ===
+Review: {text}
+
+JSON:

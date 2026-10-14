@@ -1,0 +1,66 @@
+# ===========================================================================
+# Task 1 - basic-prompt ablation
+# Identical to configs/task1.yaml (same model, same data, same split, same
+# retry policy, same decoding budget) except for the prompt itself: no label
+# definitions, no disambiguation rules, no JSON schema - a bare 3-line
+# instruction asking for one word. `task1.out_dir` is deliberately the SAME
+# as task1.yaml's and task1_carp.yaml's, so a basic-prompt run lands next to
+# both and `scripts/04_summarize_runs.py` compares all three in one table
+# for free (see its `prompt_method` column).
+# ===========================================================================
+
+# --- Reproducibility -------------------------------------------------------
+seed: 42
+
+# --- Model -----------------------------------------------------------------
+model:
+  checkpoint: "meta-llama/Llama-3.2-3B-Instruct"
+  revision: "main"
+  precision: "bf16"
+  attn_implementation: "sdpa"
+  device_map: "cuda:0"
+  # The basic system prompt is much shorter than the structured zero-shot one
+  # (no rules/definitions), so 1536 - sized for the zero-shot prompt's own
+  # ~229-token overhead - is already generous headroom here too.
+  max_input_tokens: 1536
+
+# --- Decoding ------------------------------------------------------------
+decoding:
+  do_sample: false          # greedy => temperature/top_p are inactive
+  temperature: 0.0
+  top_p: 1.0
+  # Same budget as the structured zero-shot prompt (24) on purpose: both
+  # answers are meant to be a single word/short JSON, so equalising the
+  # token budget keeps the comparison about the prompt, not the budget.
+  max_new_tokens: 24
+  repetition_penalty: 1.0
+
+# --- Dataset: identical to Task 1's -----------------------------------------
+data:
+  hf_dataset: "stanfordnlp/imdb"
+  pool_split: "train"
+  holdout_split: "test"
+  min_chars: 3
+  dedupe_on: ["text"]
+
+# --- Split: reuses the exact same frozen split Task 1 created --------------
+split:
+  train_ratio: 0.80
+  val_ratio: 0.10
+  test_ratio: 0.10
+  stratify_on: "label"
+  out_dir: "data/processed"
+
+# --- Task 1 evaluation -------------------------------------------------
+task1:
+  source: "all"
+  n_samples: 200
+  stratified_sample: true
+  batch_size: 8
+  out_dir: "outputs/task1"   # same directory as the zero-shot and CARP runs, on purpose
+
+# --- Robustness: JSON parsing + retries -------------------------------------
+retry:
+  max_attempts: 3
+  escalate_temperature: [0.0, 0.2, 0.4]
+  fallback_label: "unparsed"

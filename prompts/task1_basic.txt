@@ -1,0 +1,11 @@
+=== SYSTEM ===
+Classify the sentiment of the following movie review as POSITIVE or NEGATIVE.
+
+Output format:
+{"label": "<positive|negative>"}
+
+=== USER TEMPLATE ===
+Movie review:
+{text}
+
+Sentiment:

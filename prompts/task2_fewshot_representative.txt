@@ -1,0 +1,51 @@
+=== SYSTEM ===
+You are analyzing sentiment in movie reviews from the IMDB
+dataset. These are informal, user-written reviews of films.
+Classify each review into one of two sentiments:
+
+Positive: The reviewer recommends the film or evaluates it
+favorably overall — praises acting, writing, direction,
+atmosphere, or emotional impact, or reports enjoying it
+(e.g., "the pacing drags a bit, but the ending floored me",
+"an underrated gem I'll rewatch").
+
+Negative: The reviewer dismisses the film or evaluates it
+unfavorably overall — criticizes acting, writing, pacing,
+or coherence, reports boredom or disappointment, or warns
+others away (e.g., "two hours I'll never get back", "great
+premise, wasted on a lazy script").
+
+Judge the reviewer's overall verdict on the film, not the
+emotional tone of the plot they describe: a review of a
+tragic or violent film can be Positive, and a cheerful
+film can be reviewed Negatively. If the review is mixed,
+decide which way the reviewer's final recommendation leans.
+Sarcasm and irony indicate the opposite of the literal
+wording.
+
+For every review, respond with a single JSON object: "label"
+is one of "positive"/"negative", "confidence" is a number from
+0.0 to 1.0, and "evidence" is one concise sentence stating what
+in the review supports the label, stated directly rather than
+reasoned out.
+
+Output format:
+{"label": "<positive|negative>", "confidence": <0.0-1.0>, "evidence": "<one sentence>"}
+
+Examples:
+
+Review: This has to be one of the best, if not the best film i have seen for a very, very long time. Had enough action to satisfy an fan, and yet the plot was very good. I really enjoyed the film,and had me hooked from start to finish. Added blood and gore in there, but brought the realistic nature of what happens to the front of the film, and even had a tear jerker ending for many people i should think. It is a must watch for anyone. Seen many reviews, slating the film, but to be fair, most the films that get bad reviews, turn out to be some of the best. this proves it once again. Rent this film, buy this film, just go out and watch this film. You will not be disappointed.
+JSON: {"label": "positive", "confidence": 0.97, "evidence": "Calls it one of the best films in a long time, says it stayed hooked start to finish, and urges everyone to rent, buy, or go watch it."}
+
+Review: This is a very enjoyable film with excellent actors and actresses evoking a range of emotions. It contains some really excellent humour which the whole family can enjoy. You get to know the characters quickly and experience their ups and downs. And, it ends very upbeat
+JSON: {"label": "positive", "confidence": 0.95, "evidence": "Describes it as a very enjoyable film with excellent actors and family-friendly humour that ends on an upbeat note."}
+
+Review: I have read the other comment about this movie, and usually I try not to be harsh in my criticisms because I try to be a nice person. However, this movie is one of the worst movies that I have EVER seen (And thats topping a lot of bad USA Network plus Cinemax nights.) Whoever thought of this movie needs to be prevented from EVER making another one. This film disgusted me in a way that no other film ever. I REALLY think these people are insane. Just save your time and do not watch this fllm. Please - I wish that I had. The acting is horrible, the plot (what plot) is STUPID and degrading and insane. I really do not think this should have been made into a movie. But that is my opinion, and I am trying to save you from wasting your time.
+JSON: {"label": "negative", "confidence": 0.98, "evidence": "Calls it one of the worst movies ever seen with horrible acting and a stupid plot, and tells readers not to watch it."}
+
+Review: By reading the box at the video store this movie looks rather amusingly disturbing. You know the type....funny but supposed to frighten you.... this was not funny or horrific. the writing was lame...the jokes failed to make me laugh even at their extreme mundaneness....they were so expected. the actors didn't even do much with such a not so good script...at least I hope that wasn't their best..watch this movie at your own risk......I give it negative 3 stars outta 10
+JSON: {"label": "negative", "confidence": 0.95, "evidence": "Says it was neither funny nor scary, with lame writing and failed jokes, and rates it negative 3 stars out of 10."}
+=== USER TEMPLATE ===
+Review: {text}
+
+JSON:

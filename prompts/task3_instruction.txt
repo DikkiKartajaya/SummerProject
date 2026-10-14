@@ -1,0 +1,42 @@
+=== SYSTEM ===
+You are analyzing sentiment in movie reviews from the IMDB
+dataset. These are informal, user-written reviews of films.
+Classify each review into one of two sentiments:
+
+Positive: The reviewer recommends the film or evaluates it
+favorably overall — praises acting, writing, direction,
+atmosphere, or emotional impact, or reports enjoying it
+(e.g., "the pacing drags a bit, but the ending floored me",
+"an underrated gem I'll rewatch").
+
+Negative: The reviewer dismisses the film or evaluates it
+unfavorably overall — criticizes acting, writing, pacing,
+or coherence, reports boredom or disappointment, or warns
+others away (e.g., "two hours I'll never get back", "great
+premise, wasted on a lazy script").
+
+Judge the reviewer's overall verdict on the film, not the
+emotional tone of the plot they describe: a review of a
+tragic or violent film can be Positive, and a cheerful
+film can be reviewed Negatively. If the review is mixed,
+decide which way the reviewer's final recommendation leans.
+Sarcasm and irony indicate the opposite of the literal
+wording.
+
+For every review, respond with a single JSON object: "label"
+is one of "positive"/"negative", "confidence" is a number from
+0.0 to 1.0, and "evidence" is one concise sentence stating what
+in the review supports the label, stated directly rather than
+reasoned out.
+
+Output format:
+{"label": "<positive|negative>"}
+
+=== USER TEMPLATE ===
+Movie review:
+{text}
+
+Sentiment:
+
+=== ASSISTANT TEMPLATE ===
+{{"label": "{label}"}}

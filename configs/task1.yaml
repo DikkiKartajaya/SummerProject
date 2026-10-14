@@ -1,0 +1,86 @@
+# ===========================================================================
+# Task 1 - Zero-Shot Sentiment Analysis
+# Single source of truth for every knob. Everything written into outputs/
+# can be traced back to this file (it is copied into each run directory).
+# ===========================================================================
+
+# --- Reproducibility -------------------------------------------------------
+seed: 42
+
+# --- Model -----------------------------------------------------------------
+model:
+  # Exact checkpoint. Pinning the revision makes the run reproducible even if
+  # the repo owner pushes new weights later.
+  checkpoint: "meta-llama/Llama-3.2-3B-Instruct"
+  revision: "main"          # set to a commit SHA to fully freeze the weights
+  # "bf16" fits comfortably on a 16 GB RTX 5080 (~6.5 GB).
+  # "nf4" = 4-bit QLoRA-style loading (~2.5 GB), useful as an ablation.
+  precision: "bf16"         # one of: bf16 | fp16 | nf4 | int8
+  attn_implementation: "sdpa"   # "sdpa" is safe everywhere; "eager" as fallback
+  device_map: "cuda:0"
+  # IMDB reviews are full paragraphs, not tweets. Measured with the actual
+  # tokenizer on the FULL templated prompt (system message + review), not
+  # estimated from word counts: p95 ~= 1007, p99 ~= 1353 tokens. An earlier
+  # word-count-based estimate missed the ~229-token system prompt overhead
+  # and set this to 1024, which silently truncated ~4.5% of the pool's
+  # reviews - cutting off the end of the prompt (including the trailing
+  # "JSON:" cue) rather than raising an error. 1536 leaves well under 0.2%
+  # truncated (p99.5 ~= 1429).
+  max_input_tokens: 1536
+
+# --- Decoding: deterministic for the main comparison -----------------------
+decoding:
+  do_sample: false          # greedy => temperature/top_p are inactive
+  temperature: 0.0
+  top_p: 1.0
+  max_new_tokens: 24        # the JSON answer needs ~12 tokens
+  repetition_penalty: 1.0
+
+# --- Dataset -----------------------------------------------------------
+# HuggingFace: https://huggingface.co/datasets/stanfordnlp/imdb
+# Public dataset - no token required, but load_dataset() accepts the same
+# HF_TOKEN used for the (gated) model checkpoint, for one credential source.
+data:
+  hf_dataset: "stanfordnlp/imdb"
+  # HF split roles mirror the original design: pool_split is split 80/10/10
+  # once for Tasks 2-4; holdout_split is never split, never trained on - an
+  # independent cross-check that a score generalises beyond the pool.
+  pool_split: "train"       # 25k labeled reviews -> the POOL
+  holdout_split: "test"     # 25k labeled reviews -> the HOLDOUT
+  # ("unsupervised", 50k unlabeled reviews with label=-1, is dropped
+  # automatically and never referenced here.)
+  min_chars: 3               # discard empty / junk reviews
+  dedupe_on: ["text"]        # IMDB has no entity column, just the review text
+
+# --- Split: computed ONCE and then frozen on disk --------------------------
+# Task 1 evaluates on the FULL cleaned pool (not on the test split); the split
+# exists only so the later fine-tuning tasks reuse the exact same partitions.
+split:
+  train_ratio: 0.80
+  val_ratio: 0.10
+  test_ratio: 0.10
+  stratify_on: "label"
+  out_dir: "data/processed"
+
+# --- Task 1 evaluation -----------------------------------------------------
+task1:
+  # Pool that Task 1 samples from: "all" = the whole cleaned pool.
+  source: "all"             # one of: all | train | val | test | holdout
+  # Number of examples to score. `null` means every row in the pool.
+  # Spec requires >= 200.
+  n_samples: 200
+  stratified_sample: true   # keep the label distribution of the pool
+  batch_size: 8             # left-padded batched generation
+  out_dir: "outputs/task1"
+
+# --- Robustness: JSON parsing + retries ------------------------------------
+retry:
+  max_attempts: 3
+  # Attempt 0 = the normal prompt. Later attempts escalate: a stricter
+  # reminder is appended, and sampling is nudged so the model can escape a
+  # degenerate greedy output. Attempt 0 always stays deterministic.
+  escalate_temperature: [0.0, 0.2, 0.4]
+  # Last-resort behaviour when all attempts fail to yield valid JSON.
+  # "unparsed" excludes the row from accuracy but is still reported as a
+  # failure rate, rather than silently folding it into a real class.
+  fallback_label: "unparsed"

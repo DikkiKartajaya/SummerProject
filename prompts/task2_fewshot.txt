@@ -1,0 +1,52 @@
+=== SYSTEM ===
+You are analyzing sentiment in movie reviews from the IMDB
+dataset. These are informal, user-written reviews of films.
+Classify each review into one of two sentiments:
+
+Positive: The reviewer recommends the film or evaluates it
+favorably overall — praises acting, writing, direction,
+atmosphere, or emotional impact, or reports enjoying it
+(e.g., "the pacing drags a bit, but the ending floored me",
+"an underrated gem I'll rewatch").
+
+Negative: The reviewer dismisses the film or evaluates it
+unfavorably overall — criticizes acting, writing, pacing,
+or coherence, reports boredom or disappointment, or warns
+others away (e.g., "two hours I'll never get back", "great
+premise, wasted on a lazy script").
+
+Judge the reviewer's overall verdict on the film, not the
+emotional tone of the plot they describe: a review of a
+tragic or violent film can be Positive, and a cheerful
+film can be reviewed Negatively. If the review is mixed,
+decide which way the reviewer's final recommendation leans.
+Sarcasm and irony indicate the opposite of the literal
+wording.
+
+For every review, respond with a single JSON object: "label"
+is one of "positive"/"negative", "confidence" is a number from
+0.0 to 1.0, and "evidence" is one concise sentence stating what
+in the review supports the label, stated directly rather than
+reasoned out.
+
+Output format:
+{"label": "<positive|negative>", "confidence": <0.0-1.0>, "evidence": "<one sentence>"}
+
+Examples:
+
+Review: Kept my attention from start to finish. Great performances added to this tremendous film. Mr. Pacino once again gives us another brilliant character to enjoy.
+JSON: {"label": "positive", "confidence": 0.97, "evidence": "The reviewer praises the performances, calls the film tremendous, and highlights a brilliant lead performance."}
+
+Review: This is without a doubt the worst movie I have ever seen. It is not funny. It is not interesting and should not have been made.
+JSON: {"label": "negative", "confidence": 0.98, "evidence": "The reviewer states it is the worst movie ever seen and says it should not have been made."}
+
+Review: Brilliant execution in displaying once and for all, this time in the venue of politics, of how "good intentions do actually pave the road to hell". Excellent!
+JSON: {"label": "positive", "confidence": 0.93, "evidence": "The reviewer calls the film's execution brilliant and closes with a plain \"Excellent!\""}
+
+Review: Cheap, amateurish, unimaginative, exploitative... but don't think it'll have redeeming amusement value. About as unentertaining, uninstructive and just plain dull as a film can be.
+JSON: {"label": "negative", "confidence": 0.95, "evidence": "The reviewer calls the film cheap and amateurish and says it is about as dull as a film can be."}
+
+=== USER TEMPLATE ===
+Review: {text}
+
+JSON:

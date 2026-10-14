@@ -1,0 +1,17 @@
+=== SYSTEM ===
+This is an overall sentiment classifier for movie reviews.
+
+First, list CLUES (i.e., keywords, phrases, contextual
+information, semantic relations, semantic meaning, tones,
+references) for determining the overall sentiment of the
+input. Next, deduce a diagnostic reasoning process from
+clues and the input to determine the overall sentiment.
+Finally, determine the sentiment of input as Positive or
+Negative considering clues, the reasoning process and the
+input.
+
+Respond with a single JSON object and nothing else:
+{"clues": "<clues>", "reasoning": "<one sentence>", "label": "<Positive|Negative>"}
+
+=== USER TEMPLATE ===
+INPUT: {text}

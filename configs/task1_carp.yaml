@@ -1,0 +1,74 @@
+# ===========================================================================
+# Task 1 - CARP (Clue And Reasoning Prompting) ablation
+# Identical to configs/task1.yaml (same model, same data, same split, same
+# retry policy) except for the one thing CARP actually changes: the prompt
+# and how much room the model gets to answer with it. `task1.out_dir` is
+# deliberately the SAME as task1.yaml's, so a CARP run lands next to the
+# plain zero-shot runs and `scripts/04_summarize_runs.py` compares them in
+# one table for free (see its `prompt_method` column).
+# ===========================================================================
+
+# --- Reproducibility -------------------------------------------------------
+seed: 42
+
+# --- Model -----------------------------------------------------------------
+model:
+  checkpoint: "meta-llama/Llama-3.2-3B-Instruct"
+  revision: "main"
+  precision: "bf16"
+  attn_implementation: "sdpa"
+  device_map: "cuda:0"
+  # CARP's system prompt (~404 tokens, measured) is much longer than Task 1's
+  # plain zero-shot one, and it's added on top of the review, not instead of
+  # it - Task 1's 1024 truncated the input on a 970-token review (404 + 970 >
+  # 1024), cutting off the "JSON:" cue and producing garbage output instead
+  # of a parse failure. Measured on the real pool: review length alone is
+  # p95=738, p99=1085 tokens, so 404 + p99 ~= 1489; this clears that with
+  # margin. Batches still pad to their own longest row, so this only costs
+  # VRAM on batches that actually contain a long review.
+  max_input_tokens: 2048
+
+# --- Decoding ----------------------------------------------------------
+decoding:
+  do_sample: false          # greedy => temperature/top_p are inactive
+  temperature: 0.0
+  top_p: 1.0
+  # CARP answers with clue + reasoning + label, not a bare {"label": ...} -
+  # 24 tokens (plain zero-shot's budget) would truncate before the model even
+  # reaches the label. 320 still truncated ~8% of a 12-row smoke sample on
+  # reviews with a long, mixed-signal reasoning chain (JSON left unclosed,
+  # no label recoverable); 448 comfortably covers a clue list plus several
+  # sentences of reasoning. Raise further if predictions_task1.csv still
+  # shows truncated JSON in invalid_outputs_task1.csv.
+  max_new_tokens: 448
+  repetition_penalty: 1.0
+
+# --- Dataset: identical to Task 1's -----------------------------------------
+data:
+  hf_dataset: "stanfordnlp/imdb"
+  pool_split: "train"
+  holdout_split: "test"
+  min_chars: 3
+  dedupe_on: ["text"]
+
+# --- Split: reuses the exact same frozen split Task 1 created --------------
+split:
+  train_ratio: 0.80
+  val_ratio: 0.10
+  test_ratio: 0.10
+  stratify_on: "label"
+  out_dir: "data/processed"
+
+# --- Task 1 evaluation -------------------------------------------------
+task1:
+  source: "all"
+  n_samples: 200
+  stratified_sample: true
+  batch_size: 8              # same as task1.yaml; lower if longer CARP generations OOM
+  out_dir: "outputs/task1"   # same directory as the plain zero-shot runs, on purpose
+
+# --- Robustness: JSON parsing + retries -------------------------------------
+retry:
+  max_attempts: 3
+  escalate_temperature: [0.0, 0.2, 0.4]
+  fallback_label: "unparsed"
